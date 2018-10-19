@@ -1,0 +1,11 @@
+*.sw[iop]
+*.bak
+
+*.o
+*.d
+bin
+*.elf
+*.map
+
+*.pyc
+__pycache__
