@@ -4,6 +4,8 @@
 
 #include "telemetry.h"
 
+#define UNUSED(x) ((void)(x))
+
 /*
  * Test program that executes some telemetry code.
  */
@@ -12,7 +14,10 @@ int main(int argc, char **argv)
     channel_manifest_t *manifest;
     telemetry_packet_t **packets;
     size_t npackets;
-    int i;
+    unsigned int i;
+
+    UNUSED(argc);
+    UNUSED(argv);
 
     /* create channel manifest */
     manifest = channel_manifest_create(TELEMETRY_CAPACITY);

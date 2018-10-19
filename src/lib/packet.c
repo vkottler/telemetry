@@ -24,7 +24,7 @@
 telemetry_packet_t *telemetry_packet_create(channel_t *channels,
                                             uint32_t count)
 {
-    int i;
+    unsigned int i;
     size_t packet_size;
     size_t data_size = 0;
     uint32_t *indices;
@@ -73,7 +73,7 @@ telemetry_packet_t **telemetry_packets_from_manifest(channel_manifest_t *manifes
     telemetry_packet_t **pbuffer;
     size_t curr, max_packet_size, capacity, working_size;
     uint32_t channel_idx, channel_count;
-    int i;
+    unsigned int i;
 
     /* initialize working data */
     capacity = TELEMETRY_CAPACITY;
@@ -165,7 +165,7 @@ void telemetry_packet_print(FILE *stream, telemetry_packet_t *packet)
     fprintf(stream, "Channels:   %u\r\n", packet->channel_count);
     fputs("Indices:    ", stream);
     uint32_t *indices = PACKET_INDICES(packet);
-    for (int i = 0; i < packet->channel_count; i++)
+    for (unsigned int i = 0; i < packet->channel_count; i++)
     {
         if (i == packet->channel_count - 1)
             fprintf(stream, "%u\r\n", indices[i]);

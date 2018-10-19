@@ -1,32 +1,21 @@
-.PHONY: clean
-.DEFAULT_GOAL = test
+.PHONY: clean lib test
+.SECONDARY:
+.DEFAULT_GOAL = lib
 
-TELEMETRY_DEPS  = channel.o
-TELEMETRY_DEPS += manifest.o
-TELEMETRY_DEPS += packet.o
+# load build configuration
+include config.mk
 
-CFLAGS = -std=c99 -Werror -pedantic -m32
+# toolchain options
+include mk/toolchain.mk
 
-# compile position-independent for libraries
-%.o: %.c
-	gcc -c $(CFLAGS) -fPIC $*.c -o $*.o
+# source file discovery
+include src/conf.mk
 
-# static library
-libtelemetry.a: $(TELEMETRY_DEPS)
-	ar rcs $@ $^
+OBJECTS = $(SRCS:.c=.o)
 
-# shared library
-libtelemetry.so: $(TELEMETRY_DEPS)
-	gcc -shared -Wl,-soname,$@ -o $@ $^
+# up-to-date dependency trees
+DEPS += $(SRCS:.c=.d)
+-include $(DEPS)
 
-#export LD_LIBRARY_PATH = $(shell pwd)
-#	gcc $< -L$(shell pwd) -ltelemetry -o $@
-test: test.o libtelemetry.a
-	gcc $(CFLAGS) $^ -o $@
-
-run: test
-	@./test
-
-clean:
-	@find . -name '*.o' -delete
-	@rm -f test
+# useful target declarations
+include mk/rules.mk
