@@ -103,6 +103,6 @@ void channel_print(FILE *stream, channel_t *channel)
     fprintf(stream, "Unit: %s\r\n", channel->unit);
     fprintf(stream, "Type: %s\r\n", channel_type_to_str(channel->type));
     fprintf(stream, "Size: %u\r\n", channel->size);
-    channel_print_data(stream, channel);
+    if(channel->data!=NULL)channel_print_data(stream, channel);
     fputs("====================\r\n", stream);
 }
