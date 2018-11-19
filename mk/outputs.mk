@@ -1,20 +1,10 @@
-lib:  $(LIBRARY)
+lib: $(LIBRARY)
 
-TEST_BIN = $(OBJ_DIR)/test$(BUILD_FPRINT).bin
-CLIENT_BIN = $(OBJ_DIR)/client$(BUILD_FPRINT).bin
-SERVER_BIN = $(OBJ_DIR)/server$(BUILD_FPRINT).bin
+run-%: $(OBJ_DIR)/%$(BUILD_FPRINT).elf
+	./$<
 
-BINARIES += $(TEST_BIN)
-BINARIES += $(CLIENT_BIN)
-BINARIES += $(SERVER_BIN)
+# automatically discover source files in src/app and build them
+BINARY_SRCS := $(patsubst src/app/%, %, $(patsubst %.c, %, $(wildcard src/app/*.c)))
+BINARIES := $(foreach BINARY, $(BINARY_SRCS), $(OBJ_DIR)/$(BINARY)$(BUILD_FPRINT).bin)
 
 all: $(BINARIES)
-
-server: $(SERVER_BIN)
-	./$(OBJ_DIR)/$@$(BUILD_FPRINT).elf
-
-client: $(CLIENT_BIN)
-	./$(OBJ_DIR)/$@$(BUILD_FPRINT).elf
-
-test: $(TEST_BIN)
-	./$(OBJ_DIR)/$@$(BUILD_FPRINT).elf
