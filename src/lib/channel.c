@@ -18,19 +18,15 @@ uint32_t channel_add(channel_manifest_t *manifest,
                      channel_data_t type, size_t size)
 {
     uint32_t index = manifest->count;
-    channel_t *channel = &manifest->channels[index];
+    channel_t *channel;
 
-    /* initialize channel */
-    channel->manifest_index = index;
-    channel->name = name;
-    channel->unit = unit;
-    channel->type = type;
-    channel->size = size;
-    channel->data = NULL;
-
-    /* handle manifest capacity */
-    if (++manifest->count == manifest->capacity)
+    /* check to see if we need to expand the manifest first (if applicable) */
+    if (manifest->count == manifest->capacity)
     {
+#ifdef TELEMETRY_NO_SYS
+        telemetry_debug("%s: manifest full\r\n", __func__);
+        return -1;
+#else
         manifest->channels = realloc(manifest->channels,
                                      manifest->capacity * 2 * sizeof(channel_t));
         if (!manifest->channels)
@@ -39,7 +35,19 @@ uint32_t channel_add(channel_manifest_t *manifest,
             return -1;
         }
         manifest->capacity = manifest->capacity * 2;
+#endif
     }
+
+    /* initialize channel */
+    channel = &manifest->channels[index];
+    channel->manifest_index = index;
+    channel->name = name;
+    channel->unit = unit;
+    channel->type = type;
+    channel->size = size;
+    channel->data = NULL;
+
+    manifest->count++;
 
     return index;
 }

@@ -17,6 +17,37 @@
 #define PACKET_DATA(packet) ((void *) &((uint32_t *) &packet->blob)[packet->channel_count])
 
 /*
+ * From an array of channels, compute the size of a telemetry packet data
+ * blob.
+ */
+size_t telemetry_packet_compute_data_size(channel_t *channels, uint32_t count)
+{
+    unsigned int i;
+    size_t data_size = 0;
+    for (i = 0; i < count; i++)
+    {
+        data_size += channels[i].size;
+    }
+    return data_size;
+}
+
+/*
+ * From an array of channels, compute the overall size of a telemetry packet.
+ */
+size_t telemetry_packet_compute_size(channel_t *channels, uint32_t count)
+{
+    size_t packet_size;
+    size_t data_size = telemetry_packet_compute_data_size(channels, count);
+
+    /* calculate overall size of packet */
+    packet_size  = sizeof(telemetry_packet_t) - sizeof(void *);
+    packet_size += count * sizeof(uint32_t);
+    packet_size += data_size;
+
+    return packet_size;
+}
+
+/*
  * Build a telemetry packet from the given channels.
  *
  * Sets each channel's data pointer to its correct position in the blob.
@@ -24,17 +55,15 @@
 telemetry_packet_t *telemetry_packet_create(channel_t *channels,
                                             uint32_t count)
 {
-    unsigned int i;
+#ifdef TELEMETRY_NO_SYS
+    telemetry_debug("%s: can't dynamically allocate a packet\r\n", __func__);
+    return NULL;
+#else
     size_t packet_size;
-    size_t data_size = 0;
-    uint32_t *indices;
-    uint8_t *data;
 
     /* calculate overall size of packet */
-    packet_size  = sizeof(telemetry_packet_t) - sizeof(void *);
-    packet_size += count * sizeof(uint32_t);
-    for (i = 0; i < count; i++) data_size += channels[i].size;
-    packet_size += data_size;
+    packet_size = telemetry_packet_compute_size(channels, count);
+    packet_size += telemetry_packet_compute_data_size(channels, count);
 
     /* construct packet */
     telemetry_packet_t *packet = malloc(packet_size);
@@ -43,8 +72,25 @@ telemetry_packet_t *telemetry_packet_create(channel_t *channels,
         telemetry_debug("%s: malloc failed\r\n", __func__);
         return NULL;
     }
+    telemetry_packet_initialize(packet, channels, count);
+    return packet;
+#endif
+}
+
+/*
+ * Initialize a newly created or empty telemetry packet with default values
+ * and format it for transport.
+ */
+void telemetry_packet_initialize(telemetry_packet_t *packet,
+                                 channel_t *channels,
+                                 uint32_t count)
+{
+    unsigned int i;
+    uint32_t *indices;
+    uint8_t *data;
+
     packet->channel_count = count;
-    packet->data_size = data_size;
+    packet->data_size = telemetry_packet_compute_data_size(channels, count);
     packet->crc32 = 0xffffffff;
 
     /* initialize manifest indices */
@@ -59,8 +105,6 @@ telemetry_packet_t *telemetry_packet_create(channel_t *channels,
         channels[i].data = data;
         data += channels[i].size;
     }
-
-    return packet;
 }
 
 /*
