@@ -1,6 +1,6 @@
-.PHONY: clean lib test
+.PHONY: clean lib test all
 .SECONDARY:
-.DEFAULT_GOAL = lib
+.DEFAULT_GOAL = all
 
 # load build configuration
 include config.mk
