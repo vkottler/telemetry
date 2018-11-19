@@ -1,9 +1,11 @@
 #include <stdio.h>
-#include <stdlib.h> 
-#include <sys/socket.h> 
-#include <sys/types.h> 
-#include <netinet/in.h> 
-#include <string.h> 
+#include <stdlib.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <string.h>
 #include "telemetry.h"
 
 #define UNUSED(x) ((void)(x))
@@ -31,33 +33,45 @@ int main(int argc, char **argv)
 	//channel_print(stdout, &telem_manifest->channels[1]);
 	channel_manifest_print(stdout,telem_manifest);
 	
-	//CREATE A SOCKET 
-	int network_socket; 
+	puts("Running Client: \n");
+	UNUSED(argc);
+	UNUSED(argv);
+
+	//CREATE A SOCKET
+	int network_socket;
 	network_socket = socket(AF_INET, SOCK_STREAM, 0);
 
-	//SPECIFY AN ADDRESS FOR THE SOCKET 
-	struct sockaddr_in server_address; 
+	//SPECIFY AN ADDRESS FOR THE SOCKET
+	struct sockaddr_in server_address;
 	server_address.sin_family = AF_INET;
-	server_address.sin_port = htons(9002);
-	server_address.sin_addr.s_addr = INADDR_ANY;
+	server_address.sin_port = htons(5000);
+	server_address.sin_addr.s_addr = inet_addr("10.141.65.106");
 
-	int connection_status = connect(network_socket,(struct sockaddr *) &server_address,sizeof(server_address));
-	if(connection_status == -1){
-		printf("Error making connection to socket");
-	}
-
-	//receive data from server
-	char server_response[256];
-	recv(network_socket,&server_response,sizeof(server_response),0);
-
-	//print out server's response 
-	printf("Server send: %s\n", server_response);
-
-	close(network_socket);
+	int connection_status = connect(network_socket, (struct sockaddr *) &server_address, sizeof(server_address));
 	
-	//CHANNELS AND MANIFEST CREATED, NEED TO SEND TO SERVER 
-
-	//NEED TO SEND PACKETS TO SERVER 
-
+	//On connection, send over channel manifest if no connection error 	
+	if(connection_status == -1){
+		perror("Error making connection to socket\n");
+   		return 1;
+	}
+	else {
+		printf("Connected to server\n");
+		printf("Sending Manifest to server\n");
+		//Send all manifest channel information byte by byte
+		for (unsigned int i = 0; i < telem_manifest->count; i++) {
+		 	char char_buffer[256];
+			channel_t channel = telem_manifest->channels[i];
+			char_buffer[0] = channel.manifest_index; // uint32_t, 4 bytes
+			char_buffer[sizeof(uint32_t) - 1] = (channel_data_t) channel.type; // channel_data_t (enum),4 bytes
+			char_buffer[sizeof(uint32_t) + sizeof(channel_data_t) - 1] = (size_t) channel.size; // size_t, should be 4 bytes
+			sprintf(&char_buffer[sizeof(uint32_t) + sizeof(channel_data_t) + sizeof(size_t) - 1], "%s,%s\n", channel.name, channel.unit);
+			
+		 	send(network_socket, char_buffer, sizeof(char_buffer), 0);
+	 	}
+		printf("Finished sending manifest\n");
+	}
+	
+	//Close TCP
+	close(network_socket);
 	return 0;
 }
