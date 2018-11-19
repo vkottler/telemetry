@@ -11,6 +11,10 @@
  */
 channel_manifest_t *channel_manifest_create(uint32_t capacity)
 {
+#ifdef TELEMETRY_NO_SYS
+    telemetry_debug("%s: can't dynamically allocate a manifest\r\n", __func__);
+    return NULL;
+#else
     channel_manifest_t *manifest = malloc(sizeof(channel_manifest_t));
     if (!manifest)
     {
@@ -27,6 +31,7 @@ channel_manifest_t *channel_manifest_create(uint32_t capacity)
     }
     manifest->capacity = capacity;
     return manifest;
+#endif
 }
 
 /*
