@@ -6,6 +6,8 @@
 
 #include "manifest.h"
 
+#include <stdbool.h>
+
 typedef struct __attribute__((__packed__)) _telemetry_packet {
     uint32_t  channel_count;
     size_t    data_size;

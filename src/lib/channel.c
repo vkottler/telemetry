@@ -69,7 +69,7 @@ const char *channel_type_to_str(channel_data_t type)
         case TELEM_FLOAT:  return "FLOAT";
         case TELEM_STRING: return "STRING";
     }
-    return NULL;
+    return "UNKNOWN";
 }
 
 /*
