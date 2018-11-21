@@ -63,7 +63,7 @@ void telemetry_server_service_sources(telemetry_server_t *server)
 
     for (i = 0; i < TELEMETRY_MAX_SOURCES; i++)
     {
-        curr_connection = &server->sinks[i];
+        curr_connection = &server->sources[i];
         if (curr_connection->state == TELEMETRY_CONNECTION_CONNECTED)
         {
             amount_read = connection_read(curr_connection,
@@ -90,13 +90,14 @@ void telemetry_server_service_sinks(telemetry_server_t *server,
 {
     int i;
     ssize_t curr_transaction;
-    ssize_t bytes_sent = 0;
+    ssize_t bytes_sent;
     telemetry_connection_t *curr_connection;
 
     for (i = 0 ; i < TELEMETRY_MAX_SINKS; i++)
     {
         bool warning_printed = false;
         curr_connection = &server->sinks[i];
+        bytes_sent = 0;
         if (curr_connection->state == TELEMETRY_CONNECTION_CONNECTED)
         {
             while ((size_t) bytes_sent < num_bytes)

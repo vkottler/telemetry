@@ -69,3 +69,4 @@ ssize_t connection_read(telemetry_connection_t *connection,
                         void *buffer, size_t num_bytes);
 ssize_t connection_write(telemetry_connection_t *connection,
                          const void *buffer, size_t num_bytes);
+int connection_errors(telemetry_connection_t *connection);

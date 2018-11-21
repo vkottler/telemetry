@@ -51,6 +51,7 @@ bool connection_init(telemetry_connection_t *connection, const char *name,
     connection->connection_handle = connection_handle;
     connection->write_handle = write_handle;
     connection->read_handle = read_handle;
+    connection->state = TELEMETRY_CONNECTION_INITED;
     connection->fd = -1;
     memset(connection->metadata, 0, TELEMETRY_METADATA_SIZE);
     strcpy(connection->metadata, "UNKNOWN");
@@ -94,10 +95,14 @@ telemetry_connection_state_t connection_change_state(telemetry_connection_t *con
  */
 bool telemetry_connection_connect(telemetry_connection_t *connection, void *param)
 {
-    if (connection->state != TELEMETRY_CONNECTION_INITED)
+    if (connection->state != TELEMETRY_CONNECTION_INITED &&
+        connection->state != TELEMETRY_CONNECTION_DISCONNECTED)
     {
-        telemetry_debug("%s: can only connect from %s\r\n", __func__,
-                        connection_state_to_str(TELEMETRY_CONNECTION_INITED));
+        telemetry_debug("%s: can only connect from %s or %s, have %s\r\n",
+                        __func__,
+                        connection_state_to_str(TELEMETRY_CONNECTION_INITED),
+                        connection_state_to_str(TELEMETRY_CONNECTION_DISCONNECTED),
+                        connection_state_to_str(connection->state));
         return false;
     }
     return (connection_change_state(connection,
@@ -121,4 +126,15 @@ bool telemetry_connection_disconnect(telemetry_connection_t *connection, void *p
                                     TELEMETRY_CONNECTION_REQUEST_DISCONNECT,
                                     param) == 
             TELEMETRY_CONNECTION_DISCONNECTED);
+}
+
+/*
+ * Check for error codes on a connection. The target system must provide
+ * meanings for codes and implementation of retrieving errors from a file
+ * descriptor.
+ */
+extern int sys_fd_errors(int fd);
+int connection_errors(telemetry_connection_t *connection)
+{
+    return sys_fd_errors(connection->fd);
 }

@@ -19,9 +19,9 @@ telemetry_connection_state_t connection_actor(telemetry_connection_t *connection
     }
     else if (request == TELEMETRY_CONNECTION_REQUEST_CONNECT)
     {
-        // TODO
-        ((void)(param));
-        return TELEMETRY_CONNECTION_CONNECTED;
+        return (x86_connect(connection->fd, param) < 0) ?
+            TELEMETRY_CONNECTION_ERROR :
+            TELEMETRY_CONNECTION_CONNECTED;
     }
     return TELEMETRY_CONNECTION_ERROR;
 }
@@ -35,11 +35,35 @@ int sink_server_init(void)
 }
 
 /*
+ * Get a sink client file descriptor.
+ */
+int sink_client_init(void)
+{
+    return x86_get_client_fd();
+} 
+
+/*
  * Attempts to create and return a server socket for source clients.
  */
 int source_server_init(void)
 {
     return x86_get_server_fd(TELEMETRY_SOURCE_PORT, TELEMETRY_MAX_SOURCES);
+}
+
+/*
+ * Get a source client file descriptor.
+ */
+int source_client_init(void)
+{
+    return x86_get_client_fd();
+}
+
+/*
+ * Front-end for a system-defined call.
+ */
+int sys_fd_errors(int fd)
+{
+    return socket_errors(fd);
 }
 
 /*
@@ -62,15 +86,15 @@ void sink_connection_manager(int sink_server_fd,
             potential_connection = x86_check_connections(sink_server_fd, &client_addr);
             if (potential_connection > 0)
             {
-                sprintf(connections[i].metadata, "%s:%d",
-                        inet_ntop(AF_INET, &client_addr.sin_addr,
-                                  str, INET_ADDRSTRLEN),
-                        client_addr.sin_port);
                 if (connection_init(&connections[i], "sink_client",
                     connection_actor, socket_writer, socket_reader))
                 {
                     connections[i].state = TELEMETRY_CONNECTION_CONNECTED;
                     connections[i].fd = potential_connection;
+                    sprintf(connections[i].metadata, "%s:%d",
+                            inet_ntop(AF_INET, &client_addr.sin_addr,
+                                      str, INET_ADDRSTRLEN),
+                            client_addr.sin_port);
                 } else {
                     telemetry_debug("%s: error initializing connection\r\n", __func__);
                     socket_closer(potential_connection);
@@ -100,15 +124,15 @@ void source_connection_manager(int source_server_fd,
             potential_connection = x86_check_connections(source_server_fd, &client_addr);
             if (potential_connection > 0)
             {
-                sprintf(connections[i].metadata, "%s:%d",
-                        inet_ntop(AF_INET, &client_addr.sin_addr,
-                                  str, INET_ADDRSTRLEN),
-                        client_addr.sin_port);
-                if (connection_init(&connections[i], "sink_client",
+                if (connection_init(&connections[i], "source_client",
                     connection_actor, socket_writer, socket_reader))
                 {
                     connections[i].state = TELEMETRY_CONNECTION_CONNECTED;
                     connections[i].fd = potential_connection;
+                    sprintf(connections[i].metadata, "%s:%d",
+                            inet_ntop(AF_INET, &client_addr.sin_addr,
+                                      str, INET_ADDRSTRLEN),
+                            client_addr.sin_port);
                 } else {
                     telemetry_debug("%s: error initializing connection\r\n", __func__);
                     socket_closer(potential_connection);

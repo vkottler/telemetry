@@ -5,6 +5,9 @@
 #include "socket.h"
 
 #include <stdio.h>
+#include <string.h>
+#include <fcntl.h>
+#include <errno.h>
 
 /*
  * Generic function for closing network sockets, lets the system do anything
@@ -13,7 +16,13 @@
  */
 int socket_closer(int fd)
 {
-    return shutdown(fd, SHUT_RDWR) + close(fd);
+    char buf[64];
+    int flags;
+    shutdown(fd, SHUT_WR);
+    flags = fcntl(fd, F_GETFL, 0);
+    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+    while (read(fd, buf, 64) > 0) {;}
+    return close(fd);
 }
 
 /*
@@ -25,6 +34,7 @@ int x86_check_connections(int fd, struct sockaddr_in *address)
 {
     char str[INET_ADDRSTRLEN];
     socklen_t sock_len = sizeof(struct sockaddr_in);
+    int flags;
     int potential_connection = accept(fd, (struct sockaddr *) address,
                                       &sock_len);
     if (potential_connection < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
@@ -33,6 +43,8 @@ int x86_check_connections(int fd, struct sockaddr_in *address)
     }
     else if (potential_connection > 0)
     {
+        flags = fcntl(potential_connection, F_GETFL, 0);
+        fcntl(potential_connection, F_SETFL, flags | O_NONBLOCK);
         printf("%s:%d connected\r\n", inet_ntop(AF_INET, &address->sin_addr,
                                                 str, INET_ADDRSTRLEN),
                address->sin_port);
@@ -96,6 +108,38 @@ int x86_get_server_fd(int16_t port, int backlog)
 }
 
 /*
+ * Retrieve a client socket from the system.
+ */
+int x86_get_client_fd(void)
+{
+    int fd;
+    if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+        perror("socket creation");
+    return fd;
+}
+
+/*
+ * Get a usable sockaddr_in struct from the given parameters.
+ */
+struct sockaddr_in socket_address; 
+void *get_client_param(const char *name, int16_t port)
+{
+    memset(&socket_address, 0, sizeof(struct sockaddr_in));
+    socket_address.sin_family = AF_INET;
+    socket_address.sin_port = htons(port);
+    inet_pton(AF_INET, name, &socket_address.sin_addr);
+    return &socket_address;
+}
+
+/*
+ * System call front-end.
+ */
+int x86_connect(int socket, void *param)
+{
+    return connect(socket, (struct sockaddr *) param, sizeof(struct sockaddr));
+}
+
+/*
  * System call front-end.
  */
 ssize_t socket_writer(int fd, const void *buffer, size_t num_bytes)
@@ -104,9 +148,23 @@ ssize_t socket_writer(int fd, const void *buffer, size_t num_bytes)
 }
 
 /*
- * System call front-end.
+ * Check if there are any errors on the socket.
+ */
+int socket_errors(int fd)
+{
+    int error_code;
+    socklen_t error_code_size = sizeof(error_code);
+    getsockopt(fd, SOL_SOCKET, SO_ERROR, &error_code, &error_code_size);
+    return error_code;
+}
+
+/*
+ * System call front-end, handle non-blocking calls.
  */
 ssize_t socket_reader(int fd, void *buffer, size_t num_bytes)
 {
-    return read(fd, buffer, num_bytes);
+    ssize_t result = read(fd, buffer, num_bytes);
+    if ((result < 0 && errno == EAGAIN) || (result < 0 && errno == EWOULDBLOCK))
+        result = 0;
+    return result;
 }
