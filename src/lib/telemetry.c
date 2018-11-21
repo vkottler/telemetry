@@ -4,6 +4,8 @@
 
 #include "telemetry.h"
 
+#include <string.h>
+
 /*
  * Convert 'telemetry_connection_state_t' to a String. 
  */
@@ -13,7 +15,6 @@ const char *connection_state_to_str(telemetry_connection_state_t state)
     {
         case TELEMETRY_CONNECTION_ERROR: return "ERROR";
         case TELEMETRY_CONNECTION_INITED: return "INITED";
-        case TELEMETRY_CONNECTION_CONNECTING: return "CONNECTING";
         case TELEMETRY_CONNECTION_CONNECTED: return "CONNECTED";
         case TELEMETRY_CONNECTION_DISCONNECTED: return "DISCONNECTED";
     }
@@ -41,8 +42,7 @@ bool connection_init(telemetry_connection_t *connection, const char *name,
                      connection_handle_t connection_handle,
                      write_handle_t write_handle, read_handle_t read_handle)
 {
-    if (connection == NULL || name == NULL || connection_handle == NULL ||
-        write_handle == NULL || read_handle == NULL)
+    if (connection == NULL || name == NULL)
     {
         telemetry_debug("%s: invalid input arguments\r\n", __func__);
         return false;
@@ -52,6 +52,8 @@ bool connection_init(telemetry_connection_t *connection, const char *name,
     connection->write_handle = write_handle;
     connection->read_handle = read_handle;
     connection->fd = -1;
+    memset(connection->metadata, 0, TELEMETRY_METADATA_SIZE);
+    strcpy(connection->metadata, "UNKNOWN");
     return true;
 }
 
@@ -60,7 +62,8 @@ bool connection_init(telemetry_connection_t *connection, const char *name,
  * state.
  */
 telemetry_connection_state_t connection_change_state(telemetry_connection_t *connection,
-                                                     telemetry_connection_request_t request)
+                                                     telemetry_connection_request_t request,
+                                                     void *param)
 {
     if (connection == NULL || connection->connection_handle == NULL)
     {
@@ -76,19 +79,20 @@ telemetry_connection_state_t connection_change_state(telemetry_connection_t *con
 
     telemetry_connection_state_t initial, result;
     initial = connection->state;
-    result  = connection->connection_handle(connection, request, &connection->fd);
+    result  = connection->connection_handle(connection, request, param);
     connection->state = result;
-    telemetry_debug("%s: %s --(%s)--> %s \r\n", connection->name,
+    telemetry_debug("%s: %s --(%s)--> %s (%s)\r\n", connection->name,
                     connection_state_to_str(initial),
                     connection_request_to_str(request),
-                    connection_state_to_str(result));
+                    connection_state_to_str(result),
+                    connection->metadata);
     return result;
 }
 
 /*
  * Attempt to establish an initialized connection.
  */
-bool telemetry_connection_connect(telemetry_connection_t *connection)
+bool telemetry_connection_connect(telemetry_connection_t *connection, void *param)
 {
     if (connection->state != TELEMETRY_CONNECTION_INITED)
     {
@@ -96,14 +100,16 @@ bool telemetry_connection_connect(telemetry_connection_t *connection)
                         connection_state_to_str(TELEMETRY_CONNECTION_INITED));
         return false;
     }
-    return (connection_change_state(connection, TELEMETRY_CONNECTION_REQUEST_CONNECT) == 
+    return (connection_change_state(connection,
+                                    TELEMETRY_CONNECTION_REQUEST_CONNECT,
+                                    param) == 
             TELEMETRY_CONNECTION_CONNECTED);
 }
 
 /*
  * Attempt to disconnect a currently connected connection.
  */
-bool telemetry_connection_disconnect(telemetry_connection_t *connection)
+bool telemetry_connection_disconnect(telemetry_connection_t *connection, void *param)
 {
     if (connection->state != TELEMETRY_CONNECTION_CONNECTED)
     {
@@ -111,6 +117,8 @@ bool telemetry_connection_disconnect(telemetry_connection_t *connection)
                         connection_state_to_str(TELEMETRY_CONNECTION_CONNECTED));
         return false;
     }
-    return (connection_change_state(connection, TELEMETRY_CONNECTION_REQUEST_DISCONNECT) == 
+    return (connection_change_state(connection,
+                                    TELEMETRY_CONNECTION_REQUEST_DISCONNECT,
+                                    param) == 
             TELEMETRY_CONNECTION_DISCONNECTED);
 }

@@ -44,10 +44,17 @@ bool connection_send_packet(telemetry_connection_t *connection,
  * Attempt to read from a connection.
  */
 ssize_t connection_read(telemetry_connection_t *connection,
-                        const void *buffer, size_t num_bytes)
+                        void *buffer, size_t num_bytes)
 {
+    ssize_t result;
     if (connection == NULL || connection->fd < 0) return -1;
-    return connection->read_handle(connection->fd, buffer, num_bytes);
+    result = connection->read_handle(connection->fd, buffer, num_bytes);
+    if (result < 0)
+    {
+        telemetry_debug("%s: a read failed, disconnecting\r\n", __func__);
+        telemetry_connection_disconnect(connection, NULL);
+    }
+    return result;
 }
 
 /*
@@ -56,6 +63,13 @@ ssize_t connection_read(telemetry_connection_t *connection,
 ssize_t connection_write(telemetry_connection_t *connection,
                          const void *buffer, size_t num_bytes)
 {
+    ssize_t result;
     if (connection == NULL || connection->fd < 0) return -1;
-    return connection->write_handle(connection->fd, buffer, num_bytes);
+    result = connection->write_handle(connection->fd, buffer, num_bytes);
+    if (result < 0)
+    {
+        telemetry_debug("%s: a write failed, disconnecting\r\n", __func__);
+        telemetry_connection_disconnect(connection, NULL);
+    }
+    return result;
 }

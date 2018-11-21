@@ -16,7 +16,7 @@
 typedef int (*sink_server_init_t)(void);
 typedef int (*source_server_init_t)(void);
 
-typedef void (*server_fd_deinit_t)(int);
+typedef int (*server_fd_deinit_t)(int);
 
 typedef void (*sink_connection_manager_t)(int, telemetry_connection_t *, size_t);
 typedef void (*source_connection_manager_t)(int, telemetry_connection_t *, size_t);

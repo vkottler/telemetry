@@ -4,4 +4,4 @@ include src/target/$(TARGET).mk
 
 # discover source files
 SRCS += $(wildcard src/lib/*.c)
-SRCS += $(wildcard src/$(ARCH)/*.c)
+SRCS += $(wildcard src/arch/$(ARCH)/*.c)

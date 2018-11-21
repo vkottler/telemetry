@@ -39,24 +39,14 @@ bool telemetry_server_init(telemetry_server_t *server,
     for (i = 0; i < TELEMETRY_MAX_SOURCES; i++)
     {
         curr_connection = &server->sources[i];
-        curr_connection->fd = -1;
-        curr_connection->state = TELEMETRY_CONNECTION_DISCONNECTED;
-        curr_connection->name = NULL;
-        curr_connection->connection_handle = NULL;
-        curr_connection->write_handle = NULL;
-        curr_connection->read_handle = NULL;
+        connection_init(curr_connection, "UNKNOWN", NULL, NULL, NULL);
     }
 
     /* initialize sinks */
     for (i = 0; i < TELEMETRY_MAX_SINKS; i++)
     {
         curr_connection = &server->sinks[i];
-        curr_connection->fd = -1;
-        curr_connection->state = TELEMETRY_CONNECTION_DISCONNECTED;
-        curr_connection->name = NULL;
-        curr_connection->connection_handle = NULL;
-        curr_connection->write_handle = NULL;
-        curr_connection->read_handle = NULL;
+        connection_init(curr_connection, "UNKNOWN", NULL, NULL, NULL);
     }
 
     return true;
@@ -82,7 +72,7 @@ void telemetry_server_service_sources(telemetry_server_t *server)
             if (amount_read < 0)
             {
                 telemetry_debug("%s: read failed\r\n", curr_connection->name);
-                telemetry_connection_disconnect(curr_connection);
+                telemetry_connection_disconnect(curr_connection, NULL);
                 continue;
             }
             telemetry_server_service_sinks(server,
@@ -117,7 +107,7 @@ void telemetry_server_service_sinks(telemetry_server_t *server,
                 if (curr_transaction < 0)
                 {
                     telemetry_debug("%s: write failed\r\n", curr_connection->name);
-                    telemetry_connection_disconnect(curr_connection);
+                    telemetry_connection_disconnect(curr_connection, NULL);
                     break;
                 } 
                 else if (curr_transaction == 0 && !warning_printed)
@@ -172,9 +162,7 @@ void telemetry_server_stop(telemetry_server_t *server)
     {
         curr_connection = &server->sources[i];
         if (curr_connection->state == TELEMETRY_CONNECTION_CONNECTED)
-        {
-            telemetry_connection_disconnect(curr_connection);
-        }
+            telemetry_connection_disconnect(curr_connection, NULL);
     }
 
     /* close sink connections  */
@@ -182,8 +170,6 @@ void telemetry_server_stop(telemetry_server_t *server)
     {
         curr_connection = &server->sinks[i];
         if (curr_connection->state == TELEMETRY_CONNECTION_CONNECTED)
-        {
-            telemetry_connection_disconnect(curr_connection);
-        }
+            telemetry_connection_disconnect(curr_connection, NULL);
     }
 }
