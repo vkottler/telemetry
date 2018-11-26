@@ -30,6 +30,26 @@ int main(int argc, char **argv)
 	channel_add(telem_manifest,"gyro_y", "deg/s",TELEM_UINT32,sizeof(uint32_t));
 	channel_add(telem_manifest,"gyro_z", "deg/s",TELEM_UINT32,sizeof(uint32_t));
 
+	//PID. CHANNELS 
+	channel_add(telem_manifest,"pid_pitch", "deg/s",TELEM_UINT32,sizeof(uint32_t));
+	channel_add(telem_manifest,"pid_roll", "deg/s",TELEM_UINT32,sizeof(uint32_t));
+	channel_add(telem_manifest,"pid_yaw", "deg/s",TELEM_UINT32,sizeof(uint32_t));
+
+	//ESC CHANNELS 
+	channel_add(telem_manifest,"esc_front_left", "percent",TELEM_UINT32,sizeof(uint32_t));
+	channel_add(telem_manifest,"esc_front_right", "percent",TELEM_UINT32,sizeof(uint32_t));
+	channel_add(telem_manifest,"esc_back_left", "percent",TELEM_UINT32,sizeof(uint32_t));
+	channel_add(telem_manifest,"esc_back_right", "percent",TELEM_UINT32,sizeof(uint32_t));
+
+	//Battery CHANNELS 
+	channel_add(telem_manifest,"batt_v_cell1", "voltage",TELEM_UINT32,sizeof(uint32_t));
+	channel_add(telem_manifest,"batt_v_cell2", "voltage",TELEM_UINT32,sizeof(uint32_t));
+	channel_add(telem_manifest,"batt_v_cell3", "voltage",TELEM_UINT32,sizeof(uint32_t));
+	channel_add(telem_manifest,"batt_v_total", "voltage",TELEM_UINT32,sizeof(uint32_t));
+	
+	channel_add(telem_manifest,"batt_current", "amps",TELEM_UINT32,sizeof(uint32_t));
+
+
 	//channel_print(stdout, &telem_manifest->channels[1]);
 	//channel_manifest_print(stdout,telem_manifest);
 	
@@ -45,7 +65,7 @@ int main(int argc, char **argv)
 	struct sockaddr_in server_address;
 	server_address.sin_family = AF_INET;
 	server_address.sin_port = htons(5000);
-	server_address.sin_addr.s_addr = inet_addr("10.141.65.106");
+	server_address.sin_addr.s_addr = inet_addr("192.168.1.20");
 
 	int connection_status = connect(network_socket, (struct sockaddr *) &server_address, sizeof(server_address));
 	char char_buffer[256];
@@ -90,11 +110,11 @@ int main(int argc, char **argv)
 	struct sockaddr_in data_address;
 	data_address.sin_family = AF_INET;
 	data_address.sin_port = htons(6000);
-	data_address.sin_addr.s_addr = inet_addr("10.141.65.106");
+	data_address.sin_addr.s_addr = inet_addr("192.168.1.20");
 
 	connection_status = connect(data_socket, (struct sockaddr *) &data_address, sizeof(data_address));
 	
-	//On connection, send over channel manifest if no connection error 	
+	//On connection, send over incoming data 
 	if(connection_status == -1){
 		perror("Error making connection to socket\n");
    		return 1;
@@ -105,8 +125,6 @@ int main(int argc, char **argv)
 		printf("Sending incoming data to server\n");
 		char char_buffer[256] = {"hello"};
 		send(data_socket, char_buffer, sizeof(char_buffer), 0);
-
-
 	}
 
 	//end main
