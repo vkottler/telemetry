@@ -6,6 +6,9 @@
 
 #include "channel.h"
 
+#define TELEMETRY_MANIFEST_START    ("MANIFEST_START\r\n")
+#define TELEMETRY_MANIFEST_END      ("MANIFEST_END\r\n")
+
 typedef struct _channel_manifest {
     channel_t *channels;
     uint32_t   count;
@@ -18,3 +21,4 @@ uint32_t channel_add(channel_manifest_t *manifest,
 
 channel_manifest_t *channel_manifest_create(uint32_t capacity);
 void channel_manifest_print(FILE *stream, channel_manifest_t *manifest);
+size_t channel_manifest_line_size(channel_t *channel);

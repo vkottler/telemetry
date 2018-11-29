@@ -5,6 +5,7 @@
 #include "telemetry.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 /*
  * Create a channel manifest with a specified initial capacity.
@@ -32,6 +33,22 @@ channel_manifest_t *channel_manifest_create(uint32_t capacity)
     manifest->capacity = capacity;
     return manifest;
 #endif
+}
+
+size_t channel_manifest_line_size(channel_t *channel)
+{
+    size_t result = 0;
+    char size_str[12]; // all 32-bit values (i.e. 'size_t') can fit in this
+    result += strlen(channel->name);
+    result += 1; // ' '
+    result += strlen(channel->unit);
+    result += 1; // ' '
+    result += strlen(channel_type_to_str(channel->type));
+    result += 1; // ' '
+    sprintf(size_str, "%u", channel->size);
+    result += strlen(size_str);
+    result += 2; // '\r\n'
+    return result;
 }
 
 /*
