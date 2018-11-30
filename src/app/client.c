@@ -12,6 +12,8 @@
 
 int main(int argc, char **argv)
 {
+	static const char ip_addr[] = "172.16.42.157";
+
 	puts("Running Client: ");
 	UNUSED(argc);
 	UNUSED(argv);
@@ -65,7 +67,7 @@ int main(int argc, char **argv)
 	struct sockaddr_in server_address;
 	server_address.sin_family = AF_INET;
 	server_address.sin_port = htons(5000);
-	server_address.sin_addr.s_addr = inet_addr("192.168.1.20");
+	server_address.sin_addr.s_addr = inet_addr(ip_addr);
 
 	int connection_status = connect(network_socket, (struct sockaddr *) &server_address, sizeof(server_address));
 	char char_buffer[256];
@@ -110,10 +112,41 @@ int main(int argc, char **argv)
 	struct sockaddr_in data_address;
 	data_address.sin_family = AF_INET;
 	data_address.sin_port = htons(6000);
-	data_address.sin_addr.s_addr = inet_addr("192.168.1.20");
+	data_address.sin_addr.s_addr = inet_addr(ip_addr);
 
 	connection_status = connect(data_socket, (struct sockaddr *) &data_address, sizeof(data_address));
 	
+	//TESTING ACCEL PACKETS 
+	//CREATE A TEST MANIFEST, CREATE TEST PACKETS FROM IT 
+	channel_manifest_t *test_manifest;
+	test_manifest = channel_manifest_create(TELEMETRY_CAPACITY);
+	//ACCEL. CHANNELS 
+	channel_add(test_manifest,"accel_x", "m/s^2",TELEM_UINT32,sizeof(uint32_t));
+	channel_add(test_manifest,"accel_y", "m/s^2",TELEM_UINT32,sizeof(uint32_t));
+	channel_add(test_manifest,"accel_z", "m/s^2",TELEM_UINT32,sizeof(uint32_t));	
+
+	telemetry_packet_t **packets;
+    size_t npackets;
+	/* create telemetry packets for these channels */
+    packets = telemetry_packets_from_manifest(test_manifest, 132, &npackets);
+    if (!packets) return 1;
+    printf("\n%u packets created.\r\n", npackets);
+    
+	for (unsigned int i = 0; i < npackets; i++)
+        telemetry_packet_print(stdout, packets[i]);
+
+    /* set data values */
+    for (unsigned int i = 0; i < test_manifest->count; i++)
+    {
+            test_manifest->channels[i].data = "500";
+    }
+
+    /* print manifest */
+    for (unsigned int i = 0; i < 3; i++)
+        channel_print(stdout, &test_manifest->channels[i]);
+
+
+
 	//On connection, send over incoming data 
 	if(connection_status == -1){
 		perror("Error making connection to socket\n");
@@ -123,11 +156,8 @@ int main(int argc, char **argv)
 	{
 		printf("Connected to server on port 6000\n");
 		printf("Sending incoming data to server\n");
-		char char_buffer[256] = {"hello"};
-		send(data_socket, char_buffer, sizeof(char_buffer), 0);
+		send(data_socket, packets, 132, 0); //1500 should be replaced with size o packets	
 	}
-
 	//end main
 	return 0;
-
 }
