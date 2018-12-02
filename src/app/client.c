@@ -125,10 +125,14 @@ int main(int argc, char **argv)
 	channel_add(test_manifest,"accel_y", "m/s^2",TELEM_UINT32,sizeof(uint32_t));
 	channel_add(test_manifest,"accel_z", "m/s^2",TELEM_UINT32,sizeof(uint32_t));	
 
+	channel_add(test_manifest,"gyro_x", "deg/s",TELEM_UINT32,sizeof(uint32_t));
+	channel_add(test_manifest,"gyro_y", "deg/s",TELEM_UINT32,sizeof(uint32_t));
+	channel_add(test_manifest,"gyro_z", "deg/s",TELEM_UINT32,sizeof(uint32_t));
+
 	telemetry_packet_t **packets;
     size_t npackets;
 	/* create telemetry packets for these channels */
-    packets = telemetry_packets_from_manifest(test_manifest, 132, &npackets);
+    packets = telemetry_packets_from_manifest(test_manifest, 500, &npackets);
     if (!packets) return 1;
     printf("\n%u packets created.\r\n", npackets);
     
@@ -138,14 +142,13 @@ int main(int argc, char **argv)
     /* set data values */
     for (unsigned int i = 0; i < test_manifest->count; i++)
     {
-            test_manifest->channels[i].data = "500";
+        *((uint32_t *) test_manifest->channels[i].data) = 11;
     }
 
     /* print manifest */
-    for (unsigned int i = 0; i < 3; i++)
+    for (unsigned int i = 0; i < 6; i++){
         channel_print(stdout, &test_manifest->channels[i]);
-
-
+	}
 
 	//On connection, send over incoming data 
 	if(connection_status == -1){
@@ -156,7 +159,10 @@ int main(int argc, char **argv)
 	{
 		printf("Connected to server on port 6000\n");
 		printf("Sending incoming data to server\n");
-		send(data_socket, packets, 132, 0); //1500 should be replaced with size o packets	
+		for(unsigned int i = 0; i < npackets;i++){
+			printf("the packet size: %u\n",telemetry_packet_size(packets[i]));
+			send(data_socket, packets[i], telemetry_packet_size(packets[i]), 0);	
+		}
 	}
 	//end main
 	return 0;

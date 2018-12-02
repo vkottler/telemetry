@@ -31,6 +31,7 @@ size_t telemetry_packet_compute_data_size(channel_t *channels, uint32_t count)
     return data_size;
 }
 
+
 /*
  * From an array of channels, compute the overall size of a telemetry packet.
  */

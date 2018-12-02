@@ -42,8 +42,7 @@ int main(int argc, char **argv)
         telemetry_packet_print(stdout, packets[i]);
 
     /* set data values */
-    for (i = 0; i < manifest->count; i++)
-    {
+    for (i = 0; i < manifest->count; i++){
         if (i % 2)
             *((float *) manifest->channels[i].data) = (float) i;
         else

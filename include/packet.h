@@ -15,6 +15,8 @@ typedef struct __attribute__((__packed__)) _telemetry_packet {
 
 size_t telemetry_packet_compute_data_size(channel_t *channels, uint32_t count);
 size_t telemetry_packet_compute_size(channel_t *channels, uint32_t count);
+size_t telemetry_packet_size(telemetry_packet_t *packet);
+
 
 telemetry_packet_t *telemetry_packet_create(channel_t *channels,
                                             uint32_t count);
