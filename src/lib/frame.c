@@ -22,15 +22,27 @@ frame_t *frame_read(int fd)
     /* await start-of-frame */
     while (curr != TELEM_SOF)
     {
-        if (read(fd, &curr, 1) != 1) goto io_failed;
+        if (read(fd, &curr, 1) != 1)
+        {
+            error_msg = "read failed: SOF";
+            goto io_failed;
+        }
     }
 
     /* read frame type */
-    if (read(fd, &curr, 1) != 1) goto io_failed;
+    if (read(fd, &curr, 1) != 1)
+    {
+        error_msg = "read failed: type";
+        goto io_failed;
+    }
     frame_type = (frame_type_t) curr;
 
     /* read size of frame */
-    if (read(fd, &curr, 1) != 1) goto io_failed;
+    if (read(fd, &curr, 1) != 1)
+    {
+        error_msg = "read failed: size";
+        goto io_failed;
+    }
     frame_size = (size_t) curr;
 
     /* allocate space for the frame */
@@ -47,14 +59,22 @@ frame_t *frame_read(int fd)
     total_read = 0;
     while (frame_size)
     {
-        read_result = read(fd, ((char *) frame->data) + total_read, frame_size);
-        if (read_result <= 0) goto io_failed;
+        read_result = read(fd, ((char *) &frame->data) + total_read, frame_size);
+        if (read_result <= 0)
+        {
+            error_msg = "read failed: data";
+            goto io_failed;
+        }
         frame_size -= read_result;
         total_read += read_result;
     }
 
     /* await end-of-frame */
-    if (read(fd, &curr, 1) != 1) goto io_failed;
+    if (read(fd, &curr, 1) != 1)
+    {
+        error_msg = "read failed: EOF";
+        goto io_failed;
+    }
     else if (curr != TELEM_EOF)
     {
         error_msg = "expected EOF, got something else";

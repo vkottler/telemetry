@@ -73,11 +73,17 @@ int close_socket(int fd)
 void configure_serial_fd(int fd, speed_t baud)
 {
     struct termios options;
+    cfsetospeed (&options, baud);
+    cfsetispeed (&options, baud);
     tcgetattr(fd, &options);
-    options.c_cflag = baud | CS8 | CLOCAL | CREAD;
-    options.c_iflag = IGNPAR;
+    options.c_cflag = (options.c_cflag & ~CSIZE) | CS8;
+    options.c_cflag |= (CLOCAL | CREAD);
+    options.c_iflag &= ~IGNBRK;
+    options.c_iflag |= IGNPAR;
     options.c_oflag = 0;
     options.c_lflag = 0;
+    options.c_cc[VMIN] = 1;
+    options.c_cc[VTIME] = 0;
     tcflush(fd, TCIFLUSH);
     tcsetattr(fd, TCSANOW, &options);
 }
@@ -137,6 +143,7 @@ int main(int argc, char **argv)
     while (run)
     {
         curr_frame = frame_read(serial_fd);
+        if (curr_frame == NULL) goto report_error_quit;
         if (handle_frame(&frame_handler, curr_frame))
         {
             error_msg = "handle_frame failed";
