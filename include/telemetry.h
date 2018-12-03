@@ -5,6 +5,7 @@
 #pragma once
 
 #include "packet.h"
+#include "frame.h"
 
 #define TELEMETRY_CAPACITY  64
 #define TELEMETRY_MTU       1500
