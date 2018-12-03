@@ -12,7 +12,7 @@
 
 int main(int argc, char **argv)
 {
-	static const char ip_addr[] = "172.16.42.157";
+	static const char ip_addr[] = "10.141.65.106";
 
 	puts("Running Client: ");
 	UNUSED(argc);
@@ -23,9 +23,8 @@ int main(int argc, char **argv)
 	telem_manifest = channel_manifest_create(TELEMETRY_CAPACITY);
 
 	//ACCEL. CHANNELS 
-	channel_add(telem_manifest,"accel_x", "m/s^2",TELEM_UINT32,sizeof(uint32_t));
-	channel_add(telem_manifest,"accel_y", "m/s^2",TELEM_UINT32,sizeof(uint32_t));
-	channel_add(telem_manifest,"accel_z", "m/s^2",TELEM_UINT32,sizeof(uint32_t));	
+	channel_add(telem_manifest,"lidar_d1", "m",TELEM_UINT32,sizeof(uint32_t));
+	channel_add(telem_manifest,"lidar_d2", "m",TELEM_UINT32,sizeof(uint32_t));
 
 	//GYRO. CHANNELS 
 	channel_add(telem_manifest,"gyro_x", "deg/s",TELEM_UINT32,sizeof(uint32_t));
@@ -121,9 +120,8 @@ int main(int argc, char **argv)
 	channel_manifest_t *test_manifest;
 	test_manifest = channel_manifest_create(TELEMETRY_CAPACITY);
 	//ACCEL. CHANNELS 
-	channel_add(test_manifest,"accel_x", "m/s^2",TELEM_UINT32,sizeof(uint32_t));
-	channel_add(test_manifest,"accel_y", "m/s^2",TELEM_UINT32,sizeof(uint32_t));
-	channel_add(test_manifest,"accel_z", "m/s^2",TELEM_UINT32,sizeof(uint32_t));	
+	channel_add(test_manifest,"lidar_d1", "m",TELEM_UINT32,sizeof(uint32_t));
+	channel_add(test_manifest,"lidar_d2", "m",TELEM_UINT32,sizeof(uint32_t));
 
 	channel_add(test_manifest,"gyro_x", "deg/s",TELEM_UINT32,sizeof(uint32_t));
 	channel_add(test_manifest,"gyro_y", "deg/s",TELEM_UINT32,sizeof(uint32_t));
@@ -146,7 +144,7 @@ int main(int argc, char **argv)
     }
 
     /* print manifest */
-    for (unsigned int i = 0; i < 6; i++){
+    for (unsigned int i = 0; i < test_manifest->count; i++){
         channel_print(stdout, &test_manifest->channels[i]);
 	}
 
