@@ -32,7 +32,7 @@ int main(int argc, char **argv)
 	channel_add(telem_manifest,"gyro_z", "deg/s",TELEM_UINT32,sizeof(uint32_t));
 
 	//PID. CHANNELS 
-	channel_add(telem_manifest,"pid_pitch", "deg/s",TELEM_UINT32,sizeof(uint32_t));
+	/*channel_add(telem_manifest,"pid_pitch", "deg/s",TELEM_UINT32,sizeof(uint32_t));
 	channel_add(telem_manifest,"pid_roll", "deg/s",TELEM_UINT32,sizeof(uint32_t));
 	channel_add(telem_manifest,"pid_yaw", "deg/s",TELEM_UINT32,sizeof(uint32_t));
 
@@ -40,14 +40,13 @@ int main(int argc, char **argv)
 	channel_add(telem_manifest,"esc_front_left", "percent",TELEM_UINT32,sizeof(uint32_t));
 	channel_add(telem_manifest,"esc_front_right", "percent",TELEM_UINT32,sizeof(uint32_t));
 	channel_add(telem_manifest,"esc_back_left", "percent",TELEM_UINT32,sizeof(uint32_t));
-	channel_add(telem_manifest,"esc_back_right", "percent",TELEM_UINT32,sizeof(uint32_t));
+	channel_add(telem_manifest,"esc_back_right", "percent",TELEM_UINT32,sizeof(uint32_t));*/
 
 	//Battery CHANNELS 
 	channel_add(telem_manifest,"batt_v_cell1", "voltage",TELEM_UINT32,sizeof(uint32_t));
 	channel_add(telem_manifest,"batt_v_cell2", "voltage",TELEM_UINT32,sizeof(uint32_t));
 	channel_add(telem_manifest,"batt_v_cell3", "voltage",TELEM_UINT32,sizeof(uint32_t));
-	channel_add(telem_manifest,"batt_v_total", "voltage",TELEM_UINT32,sizeof(uint32_t));
-	
+	channel_add(telem_manifest,"batt_v_total", "voltage",TELEM_UINT32,sizeof(uint32_t));	
 	channel_add(telem_manifest,"batt_current", "amps",TELEM_UINT32,sizeof(uint32_t));
 
 
@@ -115,22 +114,10 @@ int main(int argc, char **argv)
 
 	connection_status = connect(data_socket, (struct sockaddr *) &data_address, sizeof(data_address));
 	
-	//TESTING ACCEL PACKETS 
-	//CREATE A TEST MANIFEST, CREATE TEST PACKETS FROM IT 
-	channel_manifest_t *test_manifest;
-	test_manifest = channel_manifest_create(TELEMETRY_CAPACITY);
-	//ACCEL. CHANNELS 
-	channel_add(test_manifest,"lidar_d1", "m",TELEM_UINT32,sizeof(uint32_t));
-	channel_add(test_manifest,"lidar_d2", "m",TELEM_UINT32,sizeof(uint32_t));
-
-	channel_add(test_manifest,"gyro_x", "deg/s",TELEM_UINT32,sizeof(uint32_t));
-	channel_add(test_manifest,"gyro_y", "deg/s",TELEM_UINT32,sizeof(uint32_t));
-	channel_add(test_manifest,"gyro_z", "deg/s",TELEM_UINT32,sizeof(uint32_t));
-
 	telemetry_packet_t **packets;
     size_t npackets;
 	/* create telemetry packets for these channels */
-    packets = telemetry_packets_from_manifest(test_manifest, 500, &npackets);
+    packets = telemetry_packets_from_manifest(telem_manifest, 500, &npackets);
     if (!packets) return 1;
     printf("\n%u packets created.\r\n", npackets);
     
@@ -138,14 +125,14 @@ int main(int argc, char **argv)
         telemetry_packet_print(stdout, packets[i]);
 
     /* set data values */
-    for (unsigned int i = 0; i < test_manifest->count; i++)
+    for (unsigned int i = 0; i < telem_manifest->count; i++)
     {
-        *((uint32_t *) test_manifest->channels[i].data) = 11;
+        *((uint32_t *) telem_manifest->channels[i].data) = 11;
     }
 
     /* print manifest */
-    for (unsigned int i = 0; i < test_manifest->count; i++){
-        channel_print(stdout, &test_manifest->channels[i]);
+    for (unsigned int i = 0; i < telem_manifest->count; i++){
+        channel_print(stdout, &telem_manifest->channels[i]);
 	}
 
 	//On connection, send over incoming data 
