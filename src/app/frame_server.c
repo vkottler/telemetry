@@ -35,6 +35,8 @@ int data_fd = -1;
 int manifest_fd = -1;
 int serial_fd = -1;
 
+struct timespec sleep_time;
+
 int handle_console(const char *data, size_t len)
 {
     write(console_fd, data, len);
@@ -190,12 +192,8 @@ void *command_server(void *arg)
     struct sockaddr_in client_address;
     ssize_t read_result;
     char curr;
-    struct timespec sleep_time;
 
     UNUSED(arg);
-
-    sleep_time.tv_sec = 0;
-    sleep_time.tv_nsec = 50000000;
 
     server = create_server_fd(COMMAND_PORT, 1);
 
@@ -247,9 +245,40 @@ void *command_server(void *arg)
     return NULL;
 }
 
+void *console_client_reader(void *arg)
+{
+    char curr;
+    ssize_t read_result;
+    UNUSED(arg);
+    while (run)
+    {
+        read_result = read(console_fd, &curr, 1);
+        if (read_result == 0)
+        {
+            puts("console client closed connection");
+            return NULL;
+        }
+        /* nothing to read, or an error occurred */
+        else if (read_result < 0)
+        {
+            if (errno != EAGAIN && errno != EWOULDBLOCK)
+            {
+                perror("console client connection read");
+                close_socket(console_fd);
+                return NULL;
+            }
+        }
+        /* a byte was read */
+        else if (write(serial_fd, &curr, 1) != 1)
+            perror("writing to serial fd");
+        nanosleep(&sleep_time, NULL);
+    }
+    return NULL;
+}
+
 int main(int argc, char **argv)
 {
-    pthread_t server_thread;
+    pthread_t server_thread, console_client_reader_thread;
     frame_handler_t frame_handler;
     frame_t *curr_frame;
     const char *error_msg = "error not specified";
@@ -263,6 +292,8 @@ int main(int argc, char **argv)
     frame_handler.console = handle_console;
     frame_handler.data = handle_data;
     frame_handler.manifest = handle_manifest;
+    sleep_time.tv_sec = 0;
+    sleep_time.tv_nsec = 50000;
 
     /* get serial fd */
     serial_fd = open(argv[1], O_RDWR | O_NOCTTY);
@@ -288,6 +319,8 @@ int main(int argc, char **argv)
 
     /* start command server thread */
     server_thread = pthread_create(&server_thread, NULL, command_server, NULL);
+    console_client_reader_thread = pthread_create(&console_client_reader_thread,
+                                                  NULL, console_client_reader, NULL);
 
     /* handle incoming frames until the user cancels execution with Ctrl-C */
     signal(SIGINT, sigint_handler);
@@ -312,6 +345,7 @@ int main(int argc, char **argv)
 
     /* stop command server */
     pthread_join(server_thread, NULL);
+    pthread_join(console_client_reader_thread, NULL);
 
     return 0;
 

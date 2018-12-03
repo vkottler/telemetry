@@ -4,8 +4,8 @@
 
 #pragma once
 
-#define TELEM_SOF   ((char) 0x55)
-#define TELEM_EOF   ((char) 0xAA)
+#define TELEM_SOF   ((char) 0xDE)
+#define TELEM_EOF   ((char) 0xAD)
 
 #include "telemetry.h"
 
