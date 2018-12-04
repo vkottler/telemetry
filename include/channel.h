@@ -30,3 +30,4 @@ typedef struct _channel {
 } channel_t;
 
 void channel_print(FILE *stream, channel_t *channel);
+const char *channel_type_to_str(channel_data_t type);
