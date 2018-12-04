@@ -5,6 +5,7 @@
 #include "telemetry.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 /*
  * Create a channel manifest with a specified initial capacity.
@@ -45,4 +46,21 @@ void channel_manifest_print(FILE *stream, channel_manifest_t *manifest)
     for (unsigned int i = 0; i < manifest->count; i++)
         channel_print(stream, &manifest->channels[i]);
     fputs("********************\r\n", stream);
+}
+
+void channel_manifest_send(channel_manifest_t *telem_manifest,
+                           void (*send_func_ptr)(char *, uint32_t))
+{
+    char char_buffer[128];
+    for (unsigned int i = 0; i < telem_manifest->count; i++)
+    {
+        channel_t *channel = &telem_manifest->channels[i];
+        sprintf(char_buffer, "%u,%s,%s,%s,%u\r\n",
+                channel->manifest_index,
+                channel->name,
+                channel->unit,
+                channel_type_to_str(channel->type),
+                channel->size);
+        send_func_ptr(char_buffer, strlen(char_buffer));
+    }
 }

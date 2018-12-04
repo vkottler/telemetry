@@ -3,18 +3,9 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "telemetry.h"
-
-/*
- * Retrieve the manifest indices segment from the blob.
- */
-#define PACKET_INDICES(packet)  ((uint8_t *) &packet->blob)
-
-/*
- * Retrieve the data segment of the packet from the blob.
- */
-#define PACKET_DATA(packet) ((void *) &((uint8_t *) &packet->blob)[packet->channel_count])
 
 /*
  * From an array of channels, compute the size of a telemetry packet data
@@ -91,6 +82,9 @@ void telemetry_packet_initialize(telemetry_packet_t *packet,
     indices = PACKET_INDICES(packet);
     for (i = 0; i < count; i++)
         indices[i] = channels[i].manifest_index;
+
+    /* initialize all data to zero */
+    memset(PACKET_DATA(packet), 0, packet->data_size);
 
     /* set channels' data pointers */
     data = (uint8_t *) PACKET_DATA(packet);
