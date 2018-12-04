@@ -3,18 +3,9 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "telemetry.h"
-
-/*
- * Retrieve the manifest indices segment from the blob.
- */
-#define PACKET_INDICES(packet)  ((uint8_t *) &packet->blob)
-
-/*
- * Retrieve the data segment of the packet from the blob.
- */
-#define PACKET_DATA(packet) ((void *) &((uint8_t *) &packet->blob)[packet->channel_count])
 
 /*
  * From an array of channels, compute the size of a telemetry packet data
@@ -91,6 +82,9 @@ void telemetry_packet_initialize(telemetry_packet_t *packet,
     indices = PACKET_INDICES(packet);
     for (i = 0; i < count; i++)
         indices[i] = channels[i].manifest_index;
+
+    /* initialize all data to zero */
+    memset(PACKET_DATA(packet), 0, packet->data_size);
 
     /* set channels' data pointers */
     data = (uint8_t *) PACKET_DATA(packet);
@@ -200,15 +194,15 @@ uint32_t telemetry_packet_size(telemetry_packet_t *packet)
 void telemetry_packet_print(FILE *stream, telemetry_packet_t *packet)
 {
     fputs("--------------------\r\n", stream);
-    fprintf(stream, "Channels:   %u\r\n", packet->channel_count);
+    fprintf(stream, "Channels:   %lu\r\n", packet->channel_count);
     fputs("Indices:    ", stream);
     uint8_t *indices = PACKET_INDICES(packet);
     for (uint8_t i = 0; i < packet->channel_count; i++)
     {
         if (i == packet->channel_count - 1)
-            fprintf(stream, "%u\r\n", indices[i]);
+            fprintf(stream, "%lu\r\n", indices[i]);
         else
-            fprintf(stream, "%u, ", indices[i]);
+            fprintf(stream, "%lu, ", indices[i]);
     }
     fprintf(stream, "Data  Size: %u\r\n", packet->data_size);
     fprintf(stream, "Total Size: %u\r\n", telemetry_packet_size(packet));
