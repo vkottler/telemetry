@@ -9,21 +9,21 @@
 /*
  * Retrieve the manifest indices segment from the blob.
  */
-#define PACKET_INDICES(packet)  ((uint32_t *) &packet->blob)
+#define PACKET_INDICES(packet)  ((uint8_t *) &packet->blob)
 
 /*
  * Retrieve the data segment of the packet from the blob.
  */
-#define PACKET_DATA(packet) ((void *) &((uint32_t *) &packet->blob)[packet->channel_count])
+#define PACKET_DATA(packet) ((void *) &((uint8_t *) &packet->blob)[packet->channel_count])
 
 /*
  * From an array of channels, compute the size of a telemetry packet data
  * blob.
  */
-size_t telemetry_packet_compute_data_size(channel_t *channels, uint32_t count)
+uint32_t telemetry_packet_compute_data_size(channel_t *channels, uint8_t count)
 {
-    unsigned int i;
-    size_t data_size = 0;
+    uint32_t i;
+    uint32_t data_size = 0;
     for (i = 0; i < count; i++)
     {
         data_size += channels[i].size;
@@ -34,14 +34,14 @@ size_t telemetry_packet_compute_data_size(channel_t *channels, uint32_t count)
 /*
  * From an array of channels, compute the overall size of a telemetry packet.
  */
-size_t telemetry_packet_compute_size(channel_t *channels, uint32_t count)
+uint32_t telemetry_packet_compute_size(channel_t *channels, uint8_t count)
 {
-    size_t packet_size;
-    size_t data_size = telemetry_packet_compute_data_size(channels, count);
+    uint32_t packet_size;
+    uint32_t data_size = telemetry_packet_compute_data_size(channels, count);
 
     /* calculate overall size of packet */
     packet_size  = sizeof(telemetry_packet_t) - sizeof(void *);
-    packet_size += count * sizeof(uint32_t);
+    packet_size += count * sizeof(uint8_t);
     packet_size += data_size;
 
     return packet_size;
@@ -53,13 +53,9 @@ size_t telemetry_packet_compute_size(channel_t *channels, uint32_t count)
  * Sets each channel's data pointer to its correct position in the blob.
  */
 telemetry_packet_t *telemetry_packet_create(channel_t *channels,
-                                            uint32_t count)
+                                            uint8_t count)
 {
-#ifdef TELEMETRY_NO_SYS
-    telemetry_debug("%s: can't dynamically allocate a packet\r\n", __func__);
-    return NULL;
-#else
-    size_t packet_size;
+    uint32_t packet_size;
 
     /* calculate overall size of packet */
     packet_size = telemetry_packet_compute_size(channels, count);
@@ -74,7 +70,6 @@ telemetry_packet_t *telemetry_packet_create(channel_t *channels,
     }
     telemetry_packet_initialize(packet, channels, count);
     return packet;
-#endif
 }
 
 /*
@@ -83,15 +78,14 @@ telemetry_packet_t *telemetry_packet_create(channel_t *channels,
  */
 void telemetry_packet_initialize(telemetry_packet_t *packet,
                                  channel_t *channels,
-                                 uint32_t count)
+                                 uint8_t count)
 {
-    unsigned int i;
-    uint32_t *indices;
+    uint32_t i;
+    uint8_t *indices;
     uint8_t *data;
 
     packet->channel_count = count;
     packet->data_size = telemetry_packet_compute_data_size(channels, count);
-    packet->crc32 = 0xffffffff;
 
     /* initialize manifest indices */
     indices = PACKET_INDICES(packet);
@@ -111,13 +105,13 @@ void telemetry_packet_initialize(telemetry_packet_t *packet,
  * Create an array of size-optimized telemetry packets from a channel manifest.
  */
 telemetry_packet_t **telemetry_packets_from_manifest(channel_manifest_t *manifest,
-                                                    size_t mtu, size_t *npackets)
+                                                    uint32_t mtu, uint32_t *npackets)
 {
     telemetry_packet_t **telemetry_packets;
     telemetry_packet_t **pbuffer;
-    size_t curr, max_packet_size, capacity, working_size;
-    uint32_t channel_idx, channel_count;
-    unsigned int i;
+    uint32_t curr, max_packet_size, capacity, working_size;
+    uint8_t channel_idx, channel_count;
+    uint32_t i;
 
     /* initialize working data */
     capacity = TELEMETRY_CAPACITY;
@@ -139,7 +133,7 @@ telemetry_packet_t **telemetry_packets_from_manifest(channel_manifest_t *manifes
         curr = manifest->channels[i].size;
 
         /* if adding this channel would overflow, make a new packet */
-        if (working_size + (curr + sizeof(uint32_t)) >= max_packet_size)
+        if (working_size + (curr + sizeof(uint8_t)) >= max_packet_size)
         {
             if (channel_count == 0 || working_size == 0)
             {
@@ -167,7 +161,7 @@ telemetry_packet_t **telemetry_packets_from_manifest(channel_manifest_t *manifes
             working_size = 0;
             channel_count = 0;
         }
-        working_size += curr + sizeof(uint32_t);
+        working_size += curr + sizeof(uint8_t);
         channel_count++;
     }
     
@@ -192,10 +186,10 @@ telemetry_packet_t **telemetry_packets_from_manifest(channel_manifest_t *manifes
 /*
  * Get the total size of a telemetry packet.
  */
-size_t telemetry_packet_size(telemetry_packet_t *packet)
+uint32_t telemetry_packet_size(telemetry_packet_t *packet)
 {
-    size_t result = sizeof(telemetry_packet_t) - sizeof(void *);
-    result += packet->channel_count * sizeof(uint32_t);
+    uint32_t result = sizeof(telemetry_packet_t) - sizeof(void *);
+    result += packet->channel_count * sizeof(uint8_t);
     result += packet->data_size;
     return result;
 }
@@ -208,8 +202,8 @@ void telemetry_packet_print(FILE *stream, telemetry_packet_t *packet)
     fputs("--------------------\r\n", stream);
     fprintf(stream, "Channels:   %u\r\n", packet->channel_count);
     fputs("Indices:    ", stream);
-    uint32_t *indices = PACKET_INDICES(packet);
-    for (unsigned int i = 0; i < packet->channel_count; i++)
+    uint8_t *indices = PACKET_INDICES(packet);
+    for (uint8_t i = 0; i < packet->channel_count; i++)
     {
         if (i == packet->channel_count - 1)
             fprintf(stream, "%u\r\n", indices[i]);

@@ -24,7 +24,7 @@ typedef struct _channel {
     const char     *name;
     const char     *unit;
     channel_data_t  type;
-    size_t          size;
+    uint32_t        size;
     void           *data;
     uint32_t        manifest_index;
 } channel_t;

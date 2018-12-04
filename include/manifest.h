@@ -14,7 +14,7 @@ typedef struct _channel_manifest {
 
 uint32_t channel_add(channel_manifest_t *manifest,
                      const char *name, const char *unit,
-                     channel_data_t type, size_t size);
+                     channel_data_t type, uint32_t size);
 
 channel_manifest_t *channel_manifest_create(uint32_t capacity);
 void channel_manifest_print(FILE *stream, channel_manifest_t *manifest);

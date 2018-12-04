@@ -13,7 +13,7 @@ int main(int argc, char **argv)
 {
     channel_manifest_t *manifest;
     telemetry_packet_t **packets;
-    size_t npackets;
+    uint32_t npackets;
     unsigned int i;
 
     UNUSED(argc);
@@ -24,14 +24,14 @@ int main(int argc, char **argv)
     if (!manifest) return 1;
 
     /* create sample channels */
-    for (i = 0; i < 1000; i++)
+    for (i = 0; i < 256; i++)
     {
         if (i % 2)
             channel_add(manifest, "test_float", "kg",
                         TELEM_FLOAT, sizeof(float));
         else
             channel_add(manifest, "test_channel", "N/A",
-                        TELEM_STRING, 256);
+                        TELEM_STRING, 128);
     }
 
     /* create telemetry packets for these channels */

@@ -15,7 +15,7 @@
  */
 uint32_t channel_add(channel_manifest_t *manifest,
                      const char *name, const char *unit,
-                     channel_data_t type, size_t size)
+                     channel_data_t type, uint32_t size)
 {
     uint32_t index = manifest->count;
     channel_t *channel;
