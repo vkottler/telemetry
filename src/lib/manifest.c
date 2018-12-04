@@ -41,8 +41,8 @@ channel_manifest_t *channel_manifest_create(uint32_t capacity)
 void channel_manifest_print(FILE *stream, channel_manifest_t *manifest)
 {
     fputs("********************\r\n", stream);
-    fprintf(stream, "Count:    %u\r\n", manifest->count);
-    fprintf(stream, "Capacity: %u\r\n", manifest->capacity);
+    fprintf(stream, "Count:    %lu\r\n", manifest->count);
+    fprintf(stream, "Capacity: %lu\r\n", manifest->capacity);
     for (unsigned int i = 0; i < manifest->count; i++)
         channel_print(stream, &manifest->channels[i]);
     fputs("********************\r\n", stream);
@@ -55,7 +55,7 @@ void channel_manifest_send(channel_manifest_t *telem_manifest,
     for (unsigned int i = 0; i < telem_manifest->count; i++)
     {
         channel_t *channel = &telem_manifest->channels[i];
-        sprintf(char_buffer, "%u,%s,%s,%s,%u\r\n",
+        sprintf(char_buffer, "%lu,%s,%s,%s,%lu\r\n",
                 channel->manifest_index,
                 channel->name,
                 channel->unit,

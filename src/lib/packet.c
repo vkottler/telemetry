@@ -131,7 +131,7 @@ telemetry_packet_t **telemetry_packets_from_manifest(channel_manifest_t *manifes
         {
             if (channel_count == 0 || working_size == 0)
             {
-                telemetry_debug("%s: channel[%d] larger than max packet size (%u)\r\n",
+                telemetry_debug("%s: channel[%lu] larger than max packet size (%lu)\r\n",
                                 __func__, i, max_packet_size);
                 return NULL;
             }
@@ -205,6 +205,6 @@ void telemetry_packet_print(FILE *stream, telemetry_packet_t *packet)
             fprintf(stream, "%u, ", indices[i]);
     }
     fprintf(stream, "Data  Size: %u\r\n", packet->data_size);
-    fprintf(stream, "Total Size: %u\r\n", telemetry_packet_size(packet));
+    fprintf(stream, "Total Size: %lu\r\n", telemetry_packet_size(packet));
     fputs("--------------------\r\n", stream);
 }
