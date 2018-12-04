@@ -7,16 +7,6 @@
 #include "telemetry.h"
 
 /*
- * Retrieve the manifest indices segment from the blob.
- */
-#define PACKET_INDICES(packet)  ((uint32_t *) &packet->blob)
-
-/*
- * Retrieve the data segment of the packet from the blob.
- */
-#define PACKET_DATA(packet) ((void *) &((uint32_t *) &packet->blob)[packet->channel_count])
-
-/*
  * From an array of channels, compute the size of a telemetry packet data
  * blob.
  */
@@ -206,15 +196,15 @@ size_t telemetry_packet_size(telemetry_packet_t *packet)
 void telemetry_packet_print(FILE *stream, telemetry_packet_t *packet)
 {
     fputs("--------------------\r\n", stream);
-    fprintf(stream, "Channels:   %u\r\n", packet->channel_count);
+    fprintf(stream, "Channels:   %lu\r\n", packet->channel_count);
     fputs("Indices:    ", stream);
     uint32_t *indices = PACKET_INDICES(packet);
     for (unsigned int i = 0; i < packet->channel_count; i++)
     {
         if (i == packet->channel_count - 1)
-            fprintf(stream, "%u\r\n", indices[i]);
+            fprintf(stream, "%lu\r\n", indices[i]);
         else
-            fprintf(stream, "%u, ", indices[i]);
+            fprintf(stream, "%lu, ", indices[i]);
     }
     fprintf(stream, "Data  Size: %u\r\n", packet->data_size);
     fprintf(stream, "Total Size: %u\r\n", telemetry_packet_size(packet));

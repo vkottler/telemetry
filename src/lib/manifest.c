@@ -40,8 +40,8 @@ channel_manifest_t *channel_manifest_create(uint32_t capacity)
 void channel_manifest_print(FILE *stream, channel_manifest_t *manifest)
 {
     fputs("********************\r\n", stream);
-    fprintf(stream, "Count:    %u\r\n", manifest->count);
-    fprintf(stream, "Capacity: %u\r\n", manifest->capacity);
+    fprintf(stream, "Count:    %lu\r\n", manifest->count);
+    fprintf(stream, "Capacity: %lu\r\n", manifest->capacity);
     for (unsigned int i = 0; i < manifest->count; i++)
         channel_print(stream, &manifest->channels[i]);
     fputs("********************\r\n", stream);
