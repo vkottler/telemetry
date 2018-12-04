@@ -49,7 +49,7 @@ void channel_manifest_print(FILE *stream, channel_manifest_t *manifest)
 
 void channel_manifest_send(channel_manifest_t *telem_manifest, void (*send_func_ptr)(char *, uint32_t))
 {
-    char char_buffer[256];
+    char char_buffer[128];
     for (unsigned int i = 0; i < telem_manifest->count; i++) {
         channel_t *channel = &telem_manifest->channels[i];
         *((uint32_t *) char_buffer) = channel->manifest_index;
@@ -59,6 +59,6 @@ void channel_manifest_send(channel_manifest_t *telem_manifest, void (*send_func_
                 channel->name, channel->unit);
 
         //Send the buffer
-        send_func_ptr(char_buffer, sizeof(char_buffer));
+        send_func_ptr(char_buffer, 128);
     }
 }
