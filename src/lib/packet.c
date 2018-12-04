@@ -3,6 +3,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "telemetry.h"
 
@@ -87,6 +88,9 @@ void telemetry_packet_initialize(telemetry_packet_t *packet,
     indices = PACKET_INDICES(packet);
     for (i = 0; i < count; i++)
         indices[i] = channels[i].manifest_index;
+
+    /* initialize all data to zero */
+    memset(PACKET_DATA(packet), 0, packet->data_size);
 
     /* set channels' data pointers */
     data = (uint8_t *) PACKET_DATA(packet);
