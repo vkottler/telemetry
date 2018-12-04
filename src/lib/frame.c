@@ -97,7 +97,7 @@ int handle_frame(frame_handler_t *handler, frame_t *frame)
         case TELEM_FRAME_CONSOLE:
             return handler->console((const char *) &frame->data, frame->size);
         case TELEM_FRAME_DATA:
-            return handler->data((telemetry_packet_t *) frame->data);
+            return handler->data((telemetry_packet_t *) &frame->data);
         case TELEM_FRAME_MANIFEST:
             return handler->manifest((const char *) &frame->data, frame->size);
         default:

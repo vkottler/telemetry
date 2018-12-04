@@ -1,3 +1,3 @@
 TOOLCHAIN = 
-CFLAGS   += -m32
+#CFLAGS   += -m32
 
