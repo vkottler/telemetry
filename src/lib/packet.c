@@ -48,6 +48,18 @@ size_t telemetry_packet_compute_size(channel_t *channels, uint32_t count)
 }
 
 /*
+ * From a packet, compute its size for sending.
+ */
+size_t telemetry_packet_size(telemetry_packet_t *packet)
+{
+    size_t packet_size;
+    packet_size  = sizeof(telemetry_packet_t) - sizeof(void *);
+    packet_size += packet->channel_count * sizeof(uint32_t);
+    packet_size += packet->data_size;
+    return packet_size;
+}
+
+/*
  * Build a telemetry packet from the given channels.
  *
  * Sets each channel's data pointer to its correct position in the blob.

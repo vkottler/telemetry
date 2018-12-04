@@ -22,9 +22,9 @@
 #define UNUSED(x) ((void)(x))
 
 #define MANIFEST_HOST   "localhost"
-#define MANIFEST_PORT   9020
+#define MANIFEST_PORT   5000
 #define DATA_HOST       "localhost"
-#define DATA_PORT       9020
+#define DATA_PORT       6000
 #define CONSOLE_HOST    "localhost"
 #define CONSOLE_PORT    9020
 
@@ -47,16 +47,15 @@ int handle_console(const char *data, size_t len)
 
 int handle_data(telemetry_packet_t *packet)
 {
-    UNUSED(packet);
-    puts("got telemetry data");
+    puts("got a telemetry packet");
+    write(data_fd, packet, telemetry_packet_size(packet));
     return 0;
 }
 
 int handle_manifest(const char *data, size_t len)
 {
-    UNUSED(data);
-    UNUSED(len);
-    puts("got manifest data");
+    puts("got a manifest entry");
+    write(manifest_fd, data, len);
     return 0;
 }
 
