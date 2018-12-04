@@ -194,15 +194,15 @@ uint32_t telemetry_packet_size(telemetry_packet_t *packet)
 void telemetry_packet_print(FILE *stream, telemetry_packet_t *packet)
 {
     fputs("--------------------\r\n", stream);
-    fprintf(stream, "Channels:   %lu\r\n", packet->channel_count);
+    fprintf(stream, "Channels:   %u\r\n", packet->channel_count);
     fputs("Indices:    ", stream);
     uint8_t *indices = PACKET_INDICES(packet);
     for (uint8_t i = 0; i < packet->channel_count; i++)
     {
         if (i == packet->channel_count - 1)
-            fprintf(stream, "%lu\r\n", indices[i]);
+            fprintf(stream, "%u\r\n", indices[i]);
         else
-            fprintf(stream, "%lu, ", indices[i]);
+            fprintf(stream, "%u, ", indices[i]);
     }
     fprintf(stream, "Data  Size: %u\r\n", packet->data_size);
     fprintf(stream, "Total Size: %u\r\n", telemetry_packet_size(packet));

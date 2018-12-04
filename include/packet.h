@@ -9,12 +9,12 @@
 /*
  * Retrieve the manifest indices segment from the blob.
  */
-#define PACKET_INDICES(packet)  ((uint32_t *) &packet->blob)
+#define PACKET_INDICES(packet)  ((uint8_t *) &packet->blob)
 
 /*
  * Retrieve the data segment of the packet from the blob.
  */
-#define PACKET_DATA(packet) ((void *) &((uint32_t *) &packet->blob)[packet->channel_count])
+#define PACKET_DATA(packet) ((void *) &((uint8_t *) &packet->blob)[packet->channel_count])
 
 typedef struct __attribute__((__packed__)) _telemetry_packet {
     uint8_t  channel_count;

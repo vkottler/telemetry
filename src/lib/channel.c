@@ -85,8 +85,8 @@ void channel_print_data(FILE *stream, channel_t *channel)
         case TELEM_UINT8:  fprintf(stream, "%u",   *((uint8_t *) channel->data)); break;
         case TELEM_INT16:  fprintf(stream, "%d",   *((int16_t *) channel->data)); break;
         case TELEM_UINT16: fprintf(stream, "%u",   *((uint16_t *) channel->data)); break;
-        case TELEM_INT32:  fprintf(stream, "%ld",   *((int32_t *) channel->data)); break;
-        case TELEM_UINT32: fprintf(stream, "%lu",   *((uint32_t *) channel->data)); break;
+        case TELEM_INT32:  fprintf(stream, "%d",   *((int32_t *) channel->data)); break;
+        case TELEM_UINT32: fprintf(stream, "%u",   *((uint32_t *) channel->data)); break;
         case TELEM_FLOAT:  fprintf(stream, "%.2f", *((float *) channel->data)); break;
         case TELEM_STRING: fputs((const char *) channel->data, stream); break;
     }
@@ -99,7 +99,7 @@ void channel_print_data(FILE *stream, channel_t *channel)
 void channel_print(FILE *stream, channel_t *channel)
 {
     fputs("====================\r\n", stream);
-    fprintf(stream, "Name: %s (%lu)\r\n", channel->name, channel->manifest_index);
+    fprintf(stream, "Name: %s (%u)\r\n", channel->name, channel->manifest_index);
     fprintf(stream, "Unit: %s\r\n", channel->unit);
     fprintf(stream, "Type: %s\r\n", channel_type_to_str(channel->type));
     fprintf(stream, "Size: %u\r\n", channel->size);
