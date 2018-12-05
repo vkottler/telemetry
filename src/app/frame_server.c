@@ -73,7 +73,7 @@ int handle_console(const char *data, size_t len)
 
 int handle_data(telemetry_packet_t *packet)
 {
-    puts("telemetry packet");
+    //puts("telemetry packet");
     write(data_fd, packet, telemetry_packet_size(packet));
     return 0;
 }
