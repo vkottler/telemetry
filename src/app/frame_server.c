@@ -3,29 +3,15 @@
  */
 
 #include "telemetry.h"
+#include "apps.h"
 
 #include <stdio.h>
 #include <signal.h>
 #include <termios.h>
-#include <string.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <unistd.h>
-
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-
 #include <pthread.h>
-
-#define UNUSED(x) ((void)(x))
-
-#define MANIFEST_HOST   "localhost"
-#define MANIFEST_PORT   5000
-#define DATA_HOST       "localhost"
-#define DATA_PORT       6000
-#define CONSOLE_HOST    "localhost"
-#define CONSOLE_PORT    9020
 
 int console_fd = -1;
 int data_fd = -1;
@@ -62,18 +48,6 @@ void sigint_handler(int signum)
     run = 0;
 }
 
-/*
- * Prevent future writes to a socket and wait for the system to return a 
- * read of zero before closing.
- */
-int close_socket(int fd)
-{
-    char buf[64];
-    shutdown(fd, SHUT_WR);
-    while (read(fd, buf, 64) > 0) {;}
-    return close(fd);
-}
-
 void configure_serial_fd(int fd, speed_t baud)
 {
     struct termios options;
@@ -90,17 +64,6 @@ void configure_serial_fd(int fd, speed_t baud)
     options.c_cc[VTIME] = 0;
     tcflush(fd, TCIFLUSH);
     tcsetattr(fd, TCSANOW, &options);
-}
-
-int client_connect(int fd, const char *host, uint16_t port)
-{
-    struct sockaddr_in socket_address;
-    memset(&socket_address, 0, sizeof(struct sockaddr_in));
-    socket_address.sin_family = AF_INET;
-    socket_address.sin_port = htons(port);
-    inet_pton(AF_INET, host, &socket_address.sin_addr);
-    return connect(fd, (struct sockaddr *) &socket_address,
-                   sizeof(struct sockaddr));
 }
 
 void *console_client_reader(void *arg)
@@ -157,9 +120,9 @@ int main(int argc, char **argv)
     configure_serial_fd(serial_fd, B115200);
 
     /* connect to clients */
-    console_fd = socket(AF_INET, SOCK_STREAM, 0);
-    data_fd = socket(AF_INET, SOCK_STREAM, 0);
-    manifest_fd = socket(AF_INET, SOCK_STREAM, 0);
+    console_fd = get_socket();
+    data_fd = get_socket();
+    manifest_fd = get_socket();
     if (client_connect(console_fd, CONSOLE_HOST, CONSOLE_PORT) ||
         client_connect(data_fd, DATA_HOST, DATA_PORT) ||
         client_connect(manifest_fd, MANIFEST_HOST, MANIFEST_PORT))
