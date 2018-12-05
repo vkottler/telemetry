@@ -18,6 +18,51 @@ int data_fd = -1;
 int manifest_fd = -1;
 int serial_fd = -1;
 
+#define RPI
+
+#ifdef RPI
+#include "gpio.h"
+#include <stdlib.h>
+#include <sys/mman.h>
+#include <time.h>
+
+int  mem_fd;
+void *gpio_map;
+volatile unsigned *gpio;
+struct timespec gpio_wait;
+
+void gpio_config(void)
+{
+    /* open /dev/mem */
+    if ((mem_fd = open("/dev/gpiomem", O_RDWR|O_SYNC) ) < 0) {
+        printf("can't open /dev/gpiomem \n");
+        exit(-1);
+    }
+
+    /* mmap GPIO */
+    gpio_map = mmap(
+        NULL,                 // Any adddress in our space will do
+        BLOCK_SIZE,           // Map length
+        PROT_READ|PROT_WRITE, // Enable reading & writting to mapped memory
+        MAP_SHARED,           // Shared with other processes
+        mem_fd,               // File to map
+        GPIO_BASE             // Offset to GPIO peripheral
+    );
+    close(mem_fd);            // No need to keep mem_fd open after mmap
+
+    if (gpio_map == MAP_FAILED)
+    {
+        printf("mmap error %d\n", (int) gpio_map);
+        exit(-1);
+    }
+
+    gpio = (volatile unsigned *) gpio_map;
+
+    gpio_wait.tv_sec = 0;
+    gpio_wait.tv_nsec = 1000000;
+}
+#endif
+
 int handle_console(const char *data, size_t len)
 {
     write(console_fd, data, len);
@@ -87,8 +132,15 @@ void *console_client_reader(void *arg)
             return NULL;
         }
         /* a byte was read */
-        else if (write(serial_fd, &curr, 1) != 1)
-            perror("writing to serial fd");
+        else
+        {
+#ifdef RPI
+            while (GET_GPIO(aux) == 0)
+                nanosleep(&gpio_wait, NULL);
+#endif
+            if (write(serial_fd, &curr, 1) != 1)
+                perror("writing to serial fd");
+        }
     }
     return NULL;
 }
@@ -109,6 +161,16 @@ int main(int argc, char **argv)
     frame_handler.console = handle_console;
     frame_handler.data = handle_data;
     frame_handler.manifest = handle_manifest;
+
+#ifdef RPI
+    gpio_config();
+    INP_GPIO(mode_0);
+    OUT_GPIO(mode_0);
+    INP_GPIO(mode_1);
+    OUT_GPIO(mode_1);
+    GPIO_CLR = 1 << mode_0;
+    GPIO_CLR = 1 << mode_1;
+#endif
 
     /* get serial fd */
     serial_fd = open(argv[1], O_RDWR | O_NOCTTY);
