@@ -10,6 +10,9 @@
 #include <time.h>
 #include <string.h>
 #include <unistd.h>
+#include <math.h>
+
+#define M_PI 3.14159265358979323846264338327f
 
 int console_fd = -1;
 int data_fd = -1;
@@ -34,18 +37,11 @@ void manifest_sender(char *buf, uint32_t len)
 
 void update_telemetry(channel_manifest_t *manifest)
 {
-    *((int16_t *) manifest->channels[0].data) += 1;
-    *((int16_t *) manifest->channels[1].data) += 1;
-    *((int16_t *) manifest->channels[2].data) += 1;
-
-    *((uint16_t *) manifest->channels[3].data) += 1;
-    *((uint16_t *) manifest->channels[4].data) += 1;
-
-    *((float *) manifest->channels[5].data) += 1.0f;
-    *((float *) manifest->channels[6].data) += 1.0f;
-    *((float *) manifest->channels[7].data) += 1.0f;
-    *((float *) manifest->channels[8].data) += 1.0f;
-    *((float *) manifest->channels[9].data) += 1.0f;
+    static float step = 0;
+    float angle = step / (2.0f * M_PI);
+    for (int i = 0; i < 10; i++)
+        *((float *) manifest->channels[i].data) = sinf(angle);
+    step++;
 }
 
 void send_telemetry(telemetry_packet_t **packets, uint32_t num_packets)
@@ -68,13 +64,11 @@ void send_telemetry(telemetry_packet_t **packets, uint32_t num_packets)
 
 void init_manifest(channel_manifest_t *manifest)
 {
-    channel_add(manifest, "gyro_x", "deg/s", TELEM_INT16, sizeof(int16_t));
-    channel_add(manifest, "gyro_y", "deg/s", TELEM_INT16, sizeof(int16_t));
-    channel_add(manifest, "gyro_z", "deg/s", TELEM_INT16, sizeof(int16_t));
-
-    channel_add(manifest, "lidar_d1", "mm", TELEM_UINT16, sizeof(uint16_t));
-    channel_add(manifest, "lidar_d2", "mm", TELEM_UINT16, sizeof(uint16_t));
-
+    channel_add(manifest, "gyro_x", "deg/s", TELEM_FLOAT, sizeof(float));
+    channel_add(manifest, "gyro_y", "deg/s", TELEM_FLOAT, sizeof(float));
+    channel_add(manifest, "gyro_z", "deg/s", TELEM_FLOAT, sizeof(float));
+    channel_add(manifest, "lidar_d1", "mm", TELEM_FLOAT, sizeof(float));
+    channel_add(manifest, "lidar_d2", "mm", TELEM_FLOAT, sizeof(float));
     channel_add(manifest, "batt_v_cell1", "V", TELEM_FLOAT, sizeof(float));
     channel_add(manifest, "batt_v_cell2", "V", TELEM_FLOAT, sizeof(float));
     channel_add(manifest, "batt_v_cell3", "V", TELEM_FLOAT, sizeof(float));
@@ -118,11 +112,13 @@ int main(int argc, char **argv)
     signal(SIGINT, sigint_handler);
     while (run)
     {
+        /*
         if (write(console_fd, PING_STR, strlen(PING_STR)) == -1)
         {
             fprintf(stderr, "write to console_fd failed");
             run = 0;
         }
+        */
         update_telemetry(manifest);
         send_telemetry(packets, num_packets);
         nanosleep(&sleep_duration, NULL);

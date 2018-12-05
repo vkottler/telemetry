@@ -7,7 +7,7 @@ INCLUDES    += -I include
 CFLAGS      += $(INCLUDES) -Wall -Wextra -Werror -pedantic -std=c99
 CFLAGS      += -D_POSIX_C_SOURCE=200809L -Wno-format
 CXXFLAGS    += $(CFLAGS) -std=gnu++14
-LFLAGS      += -L$(OBJ_DIR) -l$(LIBRARY_NAME) -lpthread
+LFLAGS      += -L$(OBJ_DIR) -l$(LIBRARY_NAME) -lpthread -lm
 
 # this invocation's build configuration
 include mk/arch/$(ARCH).mk
